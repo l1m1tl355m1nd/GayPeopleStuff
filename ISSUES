@@ -1,0 +1,3 @@
+Okay, so this is the issues file, to help me remember what I need to work on.
+
+On instruction [00001], the output of register access 1 is undefined, and when trying to do any sub-instruction on that instruction, it ends up causing the output of the ALU to be all 1.

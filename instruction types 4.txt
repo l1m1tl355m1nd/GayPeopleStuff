@@ -51,8 +51,8 @@ Opcode [00001]
 
 Name: Register Store
 	In code:  Store[REG] (Register 1, Register 2, Switch)
-	Instruction Register1 Register2 Switch Write_en Unused
-	5           5         5         1      1        15
+	Instruction Register1 Register2 Write_en Switch Unused   (swapped because I wired it differently already)
+	5           5         5         1        1      15
 Opcode [00010]
 		Name: Store In Register
 			In code: Store[REG] (Register 1, Register 2, Switch)

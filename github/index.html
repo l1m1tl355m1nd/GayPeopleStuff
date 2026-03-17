@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>L1M1TL355 CPU ISA</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>hljs.highlightAll();</script>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --text: #c9d1d9;
+      --text-light: #8b949e;
+      --card: #161b22;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --heading: #e6edf3;
+      --code-bg: #0d1117;
+      --table-header: #21262d;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    .container {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      flex-shrink: 0;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      position: fixed;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 1.5rem 0;
+    }
+
+    .sidebar h1 {
+      font-size: 1.4rem;
+      color: var(--heading);
+      margin: 0 1.5rem 1.5rem;
+      padding-bottom: 0.8rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar nav ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .sidebar nav li a {
+      display: block;
+      padding: 0.75rem 1.5rem;
+      color: var(--text-light);
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+
+    .sidebar nav li a:hover,
+    .sidebar nav li a.active {
+      color: var(--accent);
+      background: #1f2937;
+    }
+
+    /* Main content */
+    .main-content {
+      margin-left: 260px;
+      padding: 2.5rem 3rem;
+      max-width: 900px;
+    }
+
+    h2 {
+      color: var(--heading);
+      font-size: 2rem;
+      margin: 2.5rem 0 1.2rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.5rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.6em 0;
+      font-size: 0.96em;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 0.9em 1.2em;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+
+    th {
+      background: var(--table-header);
+      color: #e6edf3;
+      font-weight: 600;
+    }
+
+    code {
+      font-family: 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;
+      background: #1f2937;
+      padding: 0.25em 0.5em;
+      border-radius: 4px;
+      color: #79c0ff;
+    }
+
+    pre {
+      background: #161b22;
+      padding: 1.4em;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      overflow-x: auto;
+      margin: 1.6em 0;
+    }
+
+    .note {
+      background: #1f2a3a;
+      border-left: 4px solid #f0883e;
+      padding: 1.2em 1.6em;
+      margin: 1.6em 0;
+      border-radius: 4px;
+      color: #d9b788;
+    }
+
+    .variant-list {
+      margin: 1.2em 0 1.2em 2em;
+    }
+
+    .variant-list li {
+      margin-bottom: 0.7em;
+    }
+
+    .opcode {
+      color: #d2a8ff;
+      font-weight: bold;
+    }
+
+    /* Mobile */
+    @media (max-width: 900px) {
+      .container { flex-direction: column; }
+      .sidebar {
+        position: static;
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+      .main-content {
+        margin-left: 0;
+        padding: 1.8rem 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar">
+    <h1>L1M1TL355 CPU ISA Reference</h1>
+    <nav>
+      <ul>
+        <li><a href="#intro" class="active">Introduction</a></li>
+        <li><a href="#store-imm">1. Store Immediate</a></li>
+        <li><a href="#arith-imm">2. Arithmetic Immediate</a></li>
+        <li><a href="#store-reg">3. Register Store</a></li>
+        <li><a href="#arith-reg">4. Register Arithmetic</a></li>
+        <li><a href="#jump">5. Compare & Jump with Link</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+
+    <section id="intro">
+        <img src="header-2.png" style="width: 66.66667%; margin-left: 15%">
+      <h2>L1M1TL355 CPU Instruction Set Architecture</h2>
+      <p style="color: var(--text-light);">
+        Reference documentation for my custom instruction set.<br><br>
+        The content for this architecture inclodes immediate and register to register storage, immediate and register arithmetic, as well as a set of branch instructions.
+      </p>
+    </section>
+
+    <section id="store-imm">
+      <h2>1. Store Immediate Value</h2>
+      <p>Assembly: <code>Store[IMM] (Register, Number)</code></p>
+
+      <table>
+        <tr><th>Field</th><th>Bits</th><th>Description</th></tr>
+        <tr><td>Opcode</td><td>00000</td><td>—</td></tr>
+        <tr><td>Register</td><td>5</td><td>Destination register</td></tr>
+        <tr><td>Number</td><td>21</td><td>21-bit immediate value</td></tr>
+        <tr><td>Write_en</td><td>1</td><td>Write enable</td></tr>
+      </table>
+
+      <div class="note">
+        Loads a number into a register.
+      </div>
+    </section>
+
+    <section id="arith-imm">
+      <h2>2. Arithmetic with Immediate</h2>
+      <p>Assembly: <code>Arith[IMM, type] (Register, Number)</code></p>
+
+      <table>
+        <tr><th>Field</th><th>Bits</th><th>Description</th></tr>
+        <tr><td>Opcode</td><td>00001</td><td>—</td></tr>
+        <tr><td>Register</td><td>5</td><td>Target register</td></tr>
+        <tr><td>Switch</td><td>3</td><td>Operation code</td></tr>
+        <tr><td>Numerical</td><td>13</td><td>Immediate value</td></tr>
+        <tr><td>Compare Switch</td><td>3</td><td>Change the compare subtype</td></tr>
+        <tr><td>Borrow/Carry</td><td>1</td><td>Carry-in or borrow-in</td></tr>
+        <tr><td>Write Enable</td><td>1</td><td>—</td></tr>
+      </table>
+
+      <h3>Operations (Switch)</h3>
+      <ul class="variant-list">
+        <li><strong>ADD</strong> — <code>Arith[IMM, ADD] (Reg, Num, Carry)</code> — <span class="opcode">000</span></li>
+        <li><strong>SUB</strong> — <code>Arith[IMM, SUB] (Reg, Num, Borrow)</code> — <span class="opcode">001</span></li>
+        <li><strong>COM</strong> — <code>Arith[IMM, COM] (Reg, Num, Comp_Switch)</code> — <span class="opcode">010</span></li>
+        <li><strong>LFT</strong> — <code>Arith[IMM, LFT] (Reg, Num)</code> — <span class="opcode">011</span></li>
+        <li><strong>RGT</strong> — <code>Arith[IMM, RGT] (Reg, Num)</code> — <span class="opcode">100</span></li>
+        <li><strong>AND</strong> — <code>Arith[IMM, AND] (Reg, Num)</code> — <span class="opcode">101</span></li>
+        <li><strong>LOR</strong> — <code>Arith[IMM, LOR] (Reg, Num)</code> — <span class="opcode">110</span></li>
+        <li><strong>XOR</strong> — <code>Arith[IMM, XOR] (Reg, Num)</code> — <span class="opcode">111</span></li>
+      </ul>
+    </section>
+
+    <section id="store-reg">
+      <h2>3. Register Store</h2>
+      <p>Assembly: <code>Store[REG] (R1, R2, Switch)</code> or <code>Store[OUT]</code></p>
+
+      <table>
+        <tr><th>Field</th><th>Bits</th><th>Description</th></tr>
+        <tr><td>Opcode</td><td>00010</td><td>—</td></tr>
+        <tr><td>Register1</td><td>5</td><td>Source</td></tr>
+        <tr><td>Register2</td><td>5</td><td>Destination if REG, not used if OUT</td></tr>
+        <tr><td>Write Enable</td><td>1</td><td>—</td></tr>
+        <tr><td>Switch</td><td>1</td><td>0 = reg store, 1 = out</td></tr>
+        <tr><td>Unused</td><td>14</td><td>—</td></tr>
+      </table>
+
+      <ul class="variant-list">
+        <li>Switch <strong>0</strong> — Move / store between registers</li>
+        <li>Switch <strong>1</strong> — <code>Store[OUT]</code> — Output/special store</li>
+      </ul>
+    </section>
+
+    <section id="arith-reg">
+      <h2>4. Register Arithmetic</h2>
+      <p>Assembly: <code>Arith[REG, type] (R1, R2)</code></p>
+
+      <table>
+        <tr><th>Field</th><th>Bits</th><th>Description</th></tr>
+        <tr><td>Opcode</td><td>00011</td><td>—</td></tr>
+        <tr><td>Register</td><td>5</td><td>Left Operand</td></tr>
+        <tr><td>Switch</td><td>3</td><td>Operation</td></tr>
+        <tr><td>Register 2</td><td>5</td><td>Right Operand</td></tr>
+        <tr><td>Carry/Borrow</td><td>1</td><td>For Addition/Subtraction</td></tr>
+        <tr><td>Write Enable</td><td>1</td><td>—</td></tr>
+        <tr><td>Compare Switch</td><td>3</td><td>Change the compare subtype</td></tr>
+        <tr><td>Unused</td><td>9</td><td>—</td></tr>
+      </table>
+
+      <h3>Operations (Switch)</h3>
+      <ul class="variant-list">
+        <li><strong>Add</strong> — <code>Arith[REG, ADD] (R1, R2, Carry)</code> — <span class="opcode">000</span></li>
+        <li><strong>Sub</strong> — <code>Arith[REG, SUB] (R1, R2, Borrow)</code> — <span class="opcode">001</span></li>
+        <li><strong>Compare</strong> — <code>Arith[REG, COM] (R1, R2)</code> — <span class="opcode">010</span></li>
+        <li><strong>Left Shift</strong> — <code>Arith[REG, LFT] (R1, R2)</code> — <span class="opcode">011</span></li>
+        <li><strong>Right Shift</strong> — <code>Arith[REG, RGT] (R1, R2)</code> — <span class="opcode">100</span></li>
+        <li><strong>Logical AND</strong> — <code>Arith[REG, AND] (R1, R2)</code> — <span class="opcode">101</span></li>
+        <li><strong>Logical OR</strong> — <code>Arith[REG, LOR] (R1, R2)</code> — <span class="opcode">110</span></li>
+        <li><strong>Logical XOR</strong> — <code>Arith[REG, XOR] (R1, R2)</code> — <span class="opcode">111</span></li>
+      </ul>
+    </section>
+
+    <section id="jump">
+      <h2>5. Compare Jump with Return Address</h2>
+      <p>Assembly: <code>Jump[R] (R1, R2, cond, Loc_Reg, Ret_Reg)</code></p>
+
+      <table>
+        <tr><th>Field</th><th>Bits</th><th>Description</th></tr>
+        <tr><td>Opcode</td><td>00100</td><td>—</td></tr>
+        <tr><td>Register1</td><td>5</td><td>Left compare operand</td></tr>
+        <tr><td>Register2</td><td>5</td><td>Right compare operand</td></tr>
+        <tr><td>Condition</td><td>4</td><td>Which condition to output true/false</td></tr>
+        <tr><td>Loc Register</td><td>5</td><td>Jump target address register</td></tr>
+        <tr><td>Return Register</td><td>5</td><td>Register to save return PC</td></tr>
+        <tr><td>Return Address Switch</td><td>1</td><td>Whether or not saves return address</td></tr>
+        <tr><td>Unused</td><td>2</td><td>—</td></tr>
+      </table>
+
+      <h3>Conditions</h3>
+      <ul class="variant-list">
+        <li><strong>LOW</strong> — below — [0, 000]</li>
+        <li><strong>ABV</strong> — above — [0, 001]</li>
+        <li><strong>EQL</strong> — equal — [0, 010]</li>
+        <li><strong>ZRO</strong> — zero — [0, 011]</li>
+        <li><strong>NLO</strong> — not low — [1, 000]</li>
+        <li><strong>NAB</strong> — not above — [1, 001]</li>
+        <li><strong>NEQ</strong> — not equal — [1, 010]</li>
+        <li><strong>NZR</strong> — not zero — [1, 011]</li>
+        <li><strong>UNC</strong> — unconditional — [0, 100]</li>
+      </ul>
+
+      <div class="note">
+        Supports conditional branching with link (call-like behavior) by saving the return address.
+      </div>
+    </section>
+
+  </main>
+
+</div>
+
+<script>
+    // Some code from Google
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.sidebar a');
+
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(section => {
+    const sectionTop = section.offsetTop - 100;
+    if (scrollY >= sectionTop) {
+      current = section.getAttribute('id');
+    }
+  });
+
+  navLinks.forEach(link => {
+    link.classList.remove('active');
+    if (link.getAttribute('href') === '#' + current) {
+      link.classList.add('active');
+    }
+  });
+});
+</script>
+
+</body>
+</html>

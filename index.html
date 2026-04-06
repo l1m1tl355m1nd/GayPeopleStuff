@@ -1,451 +1,746 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>L1M1TL355 CPU ISA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-  <script>hljs.highlightAll();</script>
+  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     :root {
-      --bg: #0d1117;
-      --text: #c9d1d9;
-      --text-light: #8b949e;
-      --card: #161b22;
-      --border: #30363d;
-      --accent: #58a6ff;
-      --heading: #e6edf3;
-      --code-bg: #0d1117;
-      --table-header: #21262d;
+      --bg:        #08090b;
+      --bg2:       #0f1114;
+      --bg3:       #151719;
+      --border:    #1e2124;
+      --border2:   #2a2d32;
+      --text:      #b8bec8;
+      --text-dim:  #5a6070;
+      --heading:   #e2e6ee;
+      --accent:    #4af0c4;
+      --accent2:   #c084fc;
+      --warn:      #f59e0b;
+      --mono:      'IBM Plex Mono', monospace;
+      --sans:      'IBM Plex Sans', sans-serif;
+      --sidebar-w: 270px;
     }
+
+    html { scroll-behavior: smooth; }
 
     body {
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: var(--sans);
       background: var(--bg);
       color: var(--text);
-      line-height: 1.6;
+      line-height: 1.7;
+      font-size: 15px;
     }
 
-    .container {
-      display: flex;
-      min-height: 100vh;
+    /* ── SCANLINE OVERLAY ── */
+    body::before {
+      content: '';
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.07) 2px,
+        rgba(0,0,0,0.07) 4px
+      );
+      z-index: 9999;
+      opacity: 0.4;
     }
 
-    /* Sidebar */
+    /* ── LAYOUT ── */
+    .container { display: flex; min-height: 100vh; }
+
+    /* ── SIDEBAR ── */
     .sidebar {
-      width: 260px;
+      width: var(--sidebar-w);
       flex-shrink: 0;
-      background: var(--card);
+      background: var(--bg2);
       border-right: 1px solid var(--border);
       position: fixed;
       height: 100vh;
       overflow-y: auto;
-      padding: 1.5rem 0;
+      display: flex;
+      flex-direction: column;
     }
 
-    .sidebar h1 {
-      font-size: 1.4rem;
+    .sidebar-brand {
+      padding: 1.8rem 1.6rem 1.4rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-brand .chip {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+      background: rgba(74,240,196,0.08);
+      border: 1px solid rgba(74,240,196,0.2);
+      padding: 0.2em 0.6em;
+      border-radius: 2px;
+      margin-bottom: 0.6rem;
+      text-transform: uppercase;
+    }
+
+    .sidebar-brand h1 {
+      font-family: var(--mono);
+      font-size: 1.05rem;
+      font-weight: 600;
       color: var(--heading);
-      margin: 0 1.5rem 1.5rem;
+      letter-spacing: 0.03em;
+      line-height: 1.3;
+    }
+
+    .sidebar-brand p {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      margin-top: 0.35rem;
+      font-family: var(--mono);
+    }
+
+    .sidebar nav { padding: 1rem 0; flex: 1; }
+
+    .sidebar nav .section-label {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      padding: 0.9rem 1.6rem 0.4rem;
+    }
+
+    .sidebar nav a {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 0.55rem 1.6rem;
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-family: var(--mono);
+      transition: color 0.15s, background 0.15s;
+      border-left: 2px solid transparent;
+    }
+
+    .sidebar nav a .num {
+      font-size: 0.7rem;
+      color: var(--border2);
+      min-width: 1.2rem;
+    }
+
+    .sidebar nav a:hover {
+      color: var(--heading);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .sidebar nav a.active {
+      color: var(--accent);
+      border-left-color: var(--accent);
+      background: rgba(74,240,196,0.05);
+    }
+
+    .sidebar nav a.active .num { color: rgba(74,240,196,0.4); }
+
+    /* ── MAIN ── */
+    .main-content {
+      margin-left: var(--sidebar-w);
+      padding: 3rem 4rem 6rem;
+      max-width: calc(var(--sidebar-w) + 820px);
+      width: 100%;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      margin-bottom: 3.5rem;
+      position: relative;
+    }
+
+    .hero img {
+      width: 100%;
+      max-width: 580px;
+      border-radius: 6px;
+      border: 1px solid var(--border2);
+      display: block;
+      margin-bottom: 2rem;
+      filter: brightness(0.9) saturate(1.1);
+    }
+
+    .hero-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .hero-badge {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--accent2);
+      border: 1px solid rgba(192,132,252,0.3);
+      padding: 0.2em 0.7em;
+      border-radius: 2px;
+      background: rgba(192,132,252,0.06);
+    }
+
+    .hero h2 {
+      font-family: var(--mono);
+      font-size: 1.9rem;
+      font-weight: 600;
+      color: var(--heading);
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+      margin-bottom: 0.8rem;
+      border: none;
+      padding: 0;
+    }
+
+    .hero p {
+      color: var(--text-dim);
+      font-size: 0.92rem;
+      max-width: 520px;
+    }
+
+    .hero p code {
+      background: rgba(74,240,196,0.08);
+      color: var(--accent);
+      border: 1px solid rgba(74,240,196,0.15);
+    }
+
+    /* ── SECTION HEADINGS ── */
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+      margin: 3.5rem 0 1.5rem;
       padding-bottom: 0.8rem;
       border-bottom: 1px solid var(--border);
     }
 
-    .sidebar nav ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
+    .section-num {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      border: 1px solid var(--border2);
+      padding: 0.15em 0.5em;
+      border-radius: 3px;
+      flex-shrink: 0;
     }
 
-    .sidebar nav li a {
-      display: block;
-      padding: 0.75rem 1.5rem;
-      color: var(--text-light);
-      text-decoration: none;
-      transition: all 0.15s;
-    }
-
-    .sidebar nav li a:hover,
-    .sidebar nav li a.active {
-      color: var(--accent);
-      background: #1f2937;
-    }
-
-    /* Main content */
-    .main-content {
-      margin-left: 260px;
-      padding: 2.5rem 3rem;
-      max-width: 900px;
-    }
-
-    h2 {
+    .section-header h2 {
+      font-family: var(--mono);
+      font-size: 1.3rem;
+      font-weight: 600;
       color: var(--heading);
-      font-size: 2rem;
-      margin: 2.5rem 0 1.2rem;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 0.5rem;
+      letter-spacing: 0.01em;
+    }
+
+    /* ── ASSEMBLY LINE ── */
+    .asm-line {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: 5px;
+      padding: 0.8rem 1.2rem;
+      margin-bottom: 1.4rem;
+      font-family: var(--mono);
+      font-size: 0.88rem;
+      overflow-x: auto;
+    }
+
+    .asm-label {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      flex-shrink: 0;
+    }
+
+    .asm-body { color: var(--accent); }
+    .asm-body .kw { color: var(--accent2); }
+    .asm-body .arg { color: #f9d966; }
+    .asm-body .sep { color: var(--text-dim); }
+
+    /* ── TABLE ── */
+    .table-wrap {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      margin: 1.2rem 0 1.8rem;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin: 1.6em 0;
-      font-size: 0.96em;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      overflow: hidden;
-    }
-
-    th, td {
-      padding: 0.9em 1.2em;
-      border-bottom: 1px solid var(--border);
-      text-align: left;
+      font-size: 0.88rem;
     }
 
     th {
-      background: var(--table-header);
-      color: #e6edf3;
+      background: var(--bg3);
+      color: var(--heading);
+      font-family: var(--mono);
+      font-size: 0.72rem;
       font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.75rem 1.1rem;
+      border-bottom: 1px solid var(--border2);
+      text-align: left;
     }
 
+    td {
+      padding: 0.75rem 1.1rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.015); }
+
+    td:first-child {
+      font-family: var(--mono);
+      color: var(--heading);
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+
+    td:nth-child(2) {
+      font-family: var(--mono);
+      color: var(--accent2);
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+
+    /* ── INLINE CODE ── */
     code {
-      font-family: 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;
-      background: #1f2937;
-      padding: 0.25em 0.5em;
-      border-radius: 4px;
+      font-family: var(--mono);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border2);
+      padding: 0.15em 0.45em;
+      border-radius: 3px;
+      font-size: 0.87em;
       color: #79c0ff;
     }
 
-    pre {
-      background: #161b22;
-      padding: 1.4em;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      overflow-x: auto;
-      margin: 1.6em 0;
-    }
-
+    /* ── NOTE BOX ── */
     .note {
-      background: #1f2a3a;
-      border-left: 4px solid #f0883e;
-      padding: 1.2em 1.6em;
-      margin: 1.6em 0;
-      border-radius: 4px;
-      color: #d9b788;
+      border-left: 3px solid var(--warn);
+      background: rgba(245,158,11,0.06);
+      padding: 1rem 1.2rem;
+      border-radius: 0 4px 4px 0;
+      margin: 1.4rem 0;
+      font-size: 0.88rem;
+      color: #d9b066;
     }
 
-    .variant-list {
-      margin: 1.2em 0 1.2em 2em;
+    .note strong { color: var(--warn); font-family: var(--mono); }
+
+    /* ── OPS GRID ── */
+    .ops-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      margin: 1rem 0 1.6rem;
     }
 
-    .variant-list li {
-      margin-bottom: 0.7em;
+    .op-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 0.7rem 1rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.8rem;
     }
 
-    .opcode {
-      color: #d2a8ff;
-      font-weight: bold;
+    .op-code {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--accent);
+      background: rgba(74,240,196,0.08);
+      border: 1px solid rgba(74,240,196,0.2);
+      padding: 0.15em 0.5em;
+      border-radius: 3px;
+      min-width: 2.2rem;
+      text-align: center;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
     }
 
-    /* Footer */
-footer {
-  background: var(--card);           /* #161b22 */
-  border-top: 1px solid var(--border);
-  padding: 2.5rem 3rem;
-  margin-top: 4rem;
-  color: var(--text-light);
-  font-size: 0.92rem;
-}
-
-.footer-content {
-  max-width: 900px;
-  margin: 0 auto;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1.5rem;
-}
-
-.footer-left {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.footer-right {
-  display: flex;
-  gap: 1.8rem;
-}
-
-.footer-right a {
-  color: var(--text-light);
-  text-decoration: none;
-  transition: color 0.15s;
-}
-
-.footer-right a:hover {
-  color: var(--accent);
-}
-
-.footer-text {
-  color: var(--text-light);
-}
-
-    /* Mobile */
-    @media (max-width: 900px) {
-      .container { flex-direction: column; }
-      .sidebar {
-        position: static;
-        width: 100%;
-        height: auto;
-        border-right: none;
-        border-bottom: 1px solid var(--border);
-      }
-      .main-content {
-        margin-left: 0;
-        padding: 1.8rem 1.5rem;
-      }
-
-        footer {
-    padding: 2rem 1.5rem;
-  }
-  
-  .footer-content {
-    flex-direction: column;
-    text-align: center;
-  }
-  
-  .footer-right {
-    justify-content: center;
-  }
+    .op-info .op-name {
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--heading);
     }
+
+    .op-info .op-desc {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-top: 0.15rem;
+    }
+
+    /* ── CONDITION CODES ── */
+    .cond-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+      margin: 1rem 0 1.6rem;
+    }
+
+    .cond-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 0.65rem 0.9rem;
+    }
+
+    .cond-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.3rem;
+    }
+
+    .cond-mnemonic {
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--accent2);
+    }
+
+    .cond-bits {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      padding: 0.1em 0.45em;
+      border-radius: 3px;
+    }
+
+    .cond-label {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+    }
+
+    /* ── SUBHEADING ── */
+    h3 {
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin: 2rem 0 0.9rem;
+    }
+
+    p { margin-bottom: 0.9rem; }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
   </style>
 </head>
 <body>
 
 <div class="container">
 
-  <!-- Sidebar Navigation -->
   <aside class="sidebar">
-    <h1>L1M1TL355 CPU ISA Reference</h1>
+    <div class="sidebar-brand">
+      <div class="chip">ISA Ref v2</div>
+      <h1>L1M1TL355<br>CPU</h1>
+      <p>32-bit custom architecture</p>
+    </div>
     <nav>
-      <ul>
-        <li><a href="#intro" class="active">Introduction</a></li>
-        <li><a href="#store-imm">1. Store Immediate</a></li>
-        <li><a href="#arith-imm">2. Arithmetic Immediate</a></li>
-        <li><a href="#store-reg">3. Register Store</a></li>
-        <li><a href="#arith-reg">4. Register Arithmetic</a></li>
-        <li><a href="#jump">5. Compare & Jump with Link</a></li>
-      </ul>
+      <div class="section-label">Sections</div>
+      <a href="#intro" class="active"><span class="num">00</span> Introduction</a>
+      <a href="#store-imm"><span class="num">01</span> Store Immediate</a>
+      <a href="#arith-imm"><span class="num">02</span> Arithmetic Immediate</a>
+      <a href="#store-reg"><span class="num">03</span> Register Store</a>
+      <a href="#arith-reg"><span class="num">04</span> Register Arithmetic</a>
+      <a href="#jump"><span class="num">05</span> Jump / Branch</a>
     </nav>
   </aside>
 
-  <!-- Main Content -->
   <main class="main-content">
 
-    <section id="intro">
-        <img src="images/header-2.png" style="width: 66.66667%; margin-left: 15%">
-      <h2>L1M1TL355 CPU Instruction Set Architecture</h2>
-      <p style="color: var(--text-light);">
-        Reference documentation for my custom instruction set.<br><br>
-        The content for this architecture includes immediate and register to register storage, immediate and register arithmetic, as well as a set of branch instructions.
+    <!-- INTRO -->
+    <section id="intro" class="hero">
+      <img src="header-2.png" alt="L1M1TL355 CPU">
+      <div class="hero-meta">
+        <span class="hero-badge">customasm · #ruledef</span>
+        <span class="hero-badge">32-bit</span>
+      </div>
+      <h2>Instruction Set Architecture</h2>
+      <p>
+        Updated reference for the custom 32-bit ISA, using the assembly syntax defined
+        in <code>#ruledef</code> from customasm. Covers immediate and register storage,
+        arithmetic, and branch instructions.
       </p>
     </section>
 
+    <!-- 1. STORE IMMEDIATE -->
     <section id="store-imm">
-      <h2>1. Store Immediate Value</h2>
-      <p>Assembly: <code>Store[IMM] (Register, Number)</code></p>
-
-      <table>
-        <tr><th>Field</th><th>Bits</th><th>Description</th></tr>
-        <tr><td>Opcode</td><td>00000</td><td>—</td></tr>
-        <tr><td>Register</td><td>5</td><td>Destination register</td></tr>
-        <tr><td>Number</td><td>21</td><td>21-bit immediate value</td></tr>
-        <tr><td>Write_en</td><td>1</td><td>Write enable</td></tr>
-      </table>
-
-      <div class="note">
-        Loads a number into a register.
+      <div class="section-header">
+        <span class="section-num">01</span>
+        <h2>Store Immediate</h2>
       </div>
+
+      <div class="asm-line">
+        <span class="asm-label">ASM</span>
+        <span class="asm-body">
+          <span class="kw">stri</span>
+          <span class="sep"> </span>
+          <span class="arg">{we}</span><span class="sep">, </span><span class="arg">{num}</span><span class="sep">, </span><span class="arg">{reg}</span>
+        </span>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Field</th><th>Bits</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Opcode</td><td>00000</td><td>5-bit opcode</td></tr>
+            <tr><td>Number</td><td>21</td><td>21-bit immediate value</td></tr>
+            <tr><td>Register</td><td>5</td><td>Destination register (0–31)</td></tr>
+            <tr><td>Write Enable</td><td>1</td><td>Enable register write (usually 1)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note"><strong>Note</strong> — Loads a 21-bit immediate value directly into the destination register.</div>
     </section>
 
+    <!-- 2. ARITHMETIC IMMEDIATE -->
     <section id="arith-imm">
-      <h2>2. Arithmetic with Immediate</h2>
-      <p>Assembly: <code>Arith[IMM, type] (Register, Number)</code></p>
+      <div class="section-header">
+        <span class="section-num">02</span>
+        <h2>Arithmetic with Immediate</h2>
+      </div>
 
-      <table>
-        <tr><th>Field</th><th>Bits</th><th>Description</th></tr>
-        <tr><td>Opcode</td><td>00001</td><td>—</td></tr>
-        <tr><td>Register</td><td>5</td><td>Target register</td></tr>
-        <tr><td>Switch</td><td>3</td><td>Operation code</td></tr>
-        <tr><td>Numerical</td><td>13</td><td>Immediate value</td></tr>
-        <tr><td>Compare Switch</td><td>3</td><td>Change the compare subtype</td></tr>
-        <tr><td>Borrow/Carry</td><td>1</td><td>Carry-in or borrow-in</td></tr>
-        <tr><td>Write Enable</td><td>1</td><td>—</td></tr>
-      </table>
+      <div class="asm-line">
+        <span class="asm-label">ASM</span>
+        <span class="asm-body">
+          <span class="kw">addi</span><span class="sep"> / </span>
+          <span class="kw">subi</span><span class="sep"> / </span>
+          <span class="kw">comi</span><span class="sep"> / </span>
+          <span class="kw">lfti</span><span class="sep"> / </span>
+          <span class="kw">rgti</span><span class="sep"> / </span>
+          <span class="kw">andi</span><span class="sep"> / </span>
+          <span class="kw">lori</span><span class="sep"> / </span>
+          <span class="kw">xori</span>
+        </span>
+      </div>
 
-      <h3>Operations (Switch)</h3>
-      <ul class="variant-list">
-        <li><strong>ADD</strong> — <code>Arith[IMM, ADD] (Reg, Num, Carry)</code> — <span class="opcode">000</span></li>
-        <li><strong>SUB</strong> — <code>Arith[IMM, SUB] (Reg, Num, Borrow)</code> — <span class="opcode">001</span></li>
-        <li><strong>COM</strong> — <code>Arith[IMM, COM] (Reg, Num, Comp_Switch)</code> — <span class="opcode">010</span></li>
-        <li><strong>LFT</strong> — <code>Arith[IMM, LFT] (Reg, Num)</code> — <span class="opcode">011</span></li>
-        <li><strong>RGT</strong> — <code>Arith[IMM, RGT] (Reg, Num)</code> — <span class="opcode">100</span></li>
-        <li><strong>AND</strong> — <code>Arith[IMM, AND] (Reg, Num)</code> — <span class="opcode">101</span></li>
-        <li><strong>LOR</strong> — <code>Arith[IMM, LOR] (Reg, Num)</code> — <span class="opcode">110</span></li>
-        <li><strong>XOR</strong> — <code>Arith[IMM, XOR] (Reg, Num)</code> — <span class="opcode">111</span></li>
-      </ul>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Field</th><th>Bits</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Opcode</td><td>00001</td><td>5-bit opcode</td></tr>
+            <tr><td>Register</td><td>5</td><td>Target register</td></tr>
+            <tr><td>Operation</td><td>3</td><td>ADD=000, SUB=001, COM=010, LFT=011, RGT=100, AND=101, LOR=110, XOR=111</td></tr>
+            <tr><td>Immediate</td><td>13</td><td>13-bit immediate value</td></tr>
+            <tr><td>Compare Switch</td><td>4</td><td>Condition subtype flags (used by COM)</td></tr>
+            <tr><td>Carry / Borrow</td><td>1</td><td>Carry-in for ADD, borrow-in for SUB</td></tr>
+            <tr><td>Write Enable</td><td>1</td><td>Enable register write</td></tr>
+          </tbody>
+        </table>
+      </div>
 
-            <div class="note">
-        Condition outputs all 1s if the condition is met. <br><br> The conditions are:
-        <ul class="variant-list">
-        <li><strong>LOW</strong> — below — [0, 000]</li>
-        <li><strong>ABV</strong> — above — [0, 001]</li>
-        <li><strong>EQL</strong> — equal — [0, 010]</li>
-        <li><strong>ZRO</strong> — zero — [0, 011]</li>
-        <li><strong>NLO</strong> — not low — [1, 000]</li>
-        <li><strong>NAB</strong> — not above — [1, 001]</li>
-        <li><strong>NEQ</strong> — not equal — [1, 010]</li>
-        <li><strong>NZR</strong> — not zero — [1, 011]</li>
-        <li><strong>UNC</strong> — unconditional — [0, 100]</li>
-      </ul>
+      <h3>Operations</h3>
+      <div class="ops-grid">
+        <div class="op-card"><span class="op-code">000</span><div class="op-info"><div class="op-name">addi {cb}, {num}, {reg}</div><div class="op-desc">Add immediate with carry</div></div></div>
+        <div class="op-card"><span class="op-code">001</span><div class="op-info"><div class="op-name">subi {cb}, {num}, {reg}</div><div class="op-desc">Subtract immediate with borrow</div></div></div>
+        <div class="op-card"><span class="op-code">010</span><div class="op-info"><div class="op-name">comi {com}, {num}, {reg}</div><div class="op-desc">Compare immediate, sets condition codes</div></div></div>
+        <div class="op-card"><span class="op-code">011</span><div class="op-info"><div class="op-name">lfti {num}, {reg}</div><div class="op-desc">Left shift by immediate</div></div></div>
+        <div class="op-card"><span class="op-code">100</span><div class="op-info"><div class="op-name">rgti {num}, {reg}</div><div class="op-desc">Right shift by immediate</div></div></div>
+        <div class="op-card"><span class="op-code">101</span><div class="op-info"><div class="op-name">andi {num}, {reg}</div><div class="op-desc">Bitwise AND immediate</div></div></div>
+        <div class="op-card"><span class="op-code">110</span><div class="op-info"><div class="op-name">lori {num}, {reg}</div><div class="op-desc">Bitwise OR immediate</div></div></div>
+        <div class="op-card"><span class="op-code">111</span><div class="op-info"><div class="op-name">xori {num}, {reg}</div><div class="op-desc">Bitwise XOR immediate</div></div></div>
+      </div>
+
+      <h3>Compare Condition Codes</h3>
+      <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:0.8rem;">Output is all 1s when the condition is met. Used by <code>comi</code> and <code>comr</code>.</p>
+      <div class="cond-grid">
+        <div class="cond-card"><div class="cond-top"><span class="cond-mnemonic">LOW</span><span class="cond-bits">[0, 000]</span></div><div class="cond-label">Below (unsigned)</div></div>
+        <div class="cond-card"><div class="cond-top"><span class="cond-mnemonic">ABV</span><span class="cond-bits">[0, 001]</span></div><div class="cond-label">Above (unsigned)</div></div>
+        <div class="cond-card"><div class="cond-top"><span class="cond-mnemonic">EQL</span><span class="cond-bits">[0, 010]</span></div><div class="cond-label">Equal</div></div>
+        <div class="cond-card"><div class="cond-top"><span class="cond-mnemonic">ZRO</span><span class="cond-bits">[0, 011]</span></div><div class="cond-label">Zero</div></div>
+        <div class="cond-card"><div class="cond-top"><span class="cond-mnemonic">UNC</span><span class="cond-bits">[0, 100]</span></div><div class="cond-label">Unconditional</div></div>
+        <div class="cond-card"><div class="cond-top"><span class="cond-mnemonic">NLO</span><span class="cond-bits">[1, 000]</span></div><div class="cond-label">Not below</div></div>
+        <div class="cond-card"><div class="cond-top"><span class="cond-mnemonic">NAB</span><span class="cond-bits">[1, 001]</span></div><div class="cond-label">Not above</div></div>
+        <div class="cond-card"><div class="cond-top"><span class="cond-mnemonic">NEQ</span><span class="cond-bits">[1, 010]</span></div><div class="cond-label">Not equal</div></div>
+        <div class="cond-card"><div class="cond-top"><span class="cond-mnemonic">NZR</span><span class="cond-bits">[1, 011]</span></div><div class="cond-label">Not zero</div></div>
       </div>
     </section>
 
+    <!-- 3. REGISTER STORE -->
     <section id="store-reg">
-      <h2>3. Register Store</h2>
-      <p>Assembly: <code>Store[REG] (R1, R2, Switch)</code> or <code>Store[OUT]</code></p>
+      <div class="section-header">
+        <span class="section-num">03</span>
+        <h2>Register Store / Output</h2>
+      </div>
 
-      <table>
-        <tr><th>Field</th><th>Bits</th><th>Description</th></tr>
-        <tr><td>Opcode</td><td>00010</td><td>—</td></tr>
-        <tr><td>Register1</td><td>5</td><td>Source</td></tr>
-        <tr><td>Register2</td><td>5</td><td>Destination if REG, not used if OUT</td></tr>
-        <tr><td>Write Enable</td><td>1</td><td>—</td></tr>
-        <tr><td>Switch</td><td>15</td><td>0 = reg store, 1 - 14 = out (encoded for 15-bit addressing out from pins)</td></tr>
-      </table>
+      <div class="asm-line">
+        <span class="asm-label">ASM</span>
+        <span class="asm-body">
+          <span class="kw">strr</span> <span class="arg">{reg2}</span><span class="sep">, </span><span class="arg">{reg1}</span>
+          <span class="sep">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+          <span class="kw">stro</span> <span class="arg">{decoder}</span><span class="sep">, </span><span class="arg">{reg1}</span>
+        </span>
+      </div>
 
-      <ul class="variant-list">
-        <li>Switch <strong>0</strong> — Move / store between registers</li>
-        <li>Switch <strong>1</strong> — <code>Store[OUT]</code> — Output/special store</li>
-      </ul>
-    </section>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Field</th><th>Bits</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Opcode</td><td>00010</td><td>5-bit opcode</td></tr>
+            <tr><td>Reg1</td><td>5</td><td>Source register</td></tr>
+            <tr><td>Reg2</td><td>5</td><td>Destination (for register store), unused for OUT</td></tr>
+            <tr><td>Write Enable</td><td>1</td><td>Enable register write</td></tr>
+            <tr><td>Switch</td><td>15</td><td>0 = register move; 1–14 = output (15-bit pin addressing)</td></tr>
+          </tbody>
+        </table>
+      </div>
 
-    <section id="arith-reg">
-      <h2>4. Register Arithmetic</h2>
-      <p>Assembly: <code>Arith[REG, type] (R1, R2)</code></p>
-
-      <table>
-        <tr><th>Field</th><th>Bits</th><th>Description</th></tr>
-        <tr><td>Opcode</td><td>00011</td><td>—</td></tr>
-        <tr><td>Register</td><td>5</td><td>Left Operand</td></tr>
-        <tr><td>Switch</td><td>3</td><td>Operation</td></tr>
-        <tr><td>Register 2</td><td>5</td><td>Right Operand</td></tr>
-        <tr><td>Carry/Borrow</td><td>1</td><td>For Addition/Subtraction</td></tr>
-        <tr><td>Write Enable</td><td>1</td><td>—</td></tr>
-        <tr><td>Compare Switch</td><td>3</td><td>Change the compare subtype</td></tr>
-        <tr><td>Unused</td><td>9</td><td>—</td></tr>
-      </table>
-
-      <h3>Operations (Switch)</h3>
-      <ul class="variant-list">
-        <li><strong>Add</strong> — <code>Arith[REG, ADD] (R1, R2, Carry)</code> — <span class="opcode">000</span></li>
-        <li><strong>Sub</strong> — <code>Arith[REG, SUB] (R1, R2, Borrow)</code> — <span class="opcode">001</span></li>
-        <li><strong>Compare</strong> — <code>Arith[REG, COM] (R1, R2)</code> — <span class="opcode">010</span></li>
-        <li><strong>Left Shift</strong> — <code>Arith[REG, LFT] (R1, R2)</code> — <span class="opcode">011</span></li>
-        <li><strong>Right Shift</strong> — <code>Arith[REG, RGT] (R1, R2)</code> — <span class="opcode">100</span></li>
-        <li><strong>Logical AND</strong> — <code>Arith[REG, AND] (R1, R2)</code> — <span class="opcode">101</span></li>
-        <li><strong>Logical OR</strong> — <code>Arith[REG, LOR] (R1, R2)</code> — <span class="opcode">110</span></li>
-        <li><strong>Logical XOR</strong> — <code>Arith[REG, XOR] (R1, R2)</code> — <span class="opcode">111</span></li>
-      </ul>
       <div class="note">
-        Condition outputs all 1s if the condition is met. <br><br> The conditions are:
-        <ul class="variant-list">
-        <li><strong>LOW</strong> — below — [0, 000]</li>
-        <li><strong>ABV</strong> — above — [0, 001]</li>
-        <li><strong>EQL</strong> — equal — [0, 010]</li>
-        <li><strong>ZRO</strong> — zero — [0, 011]</li>
-        <li><strong>NLO</strong> — not low — [1, 000]</li>
-        <li><strong>NAB</strong> — not above — [1, 001]</li>
-        <li><strong>NEQ</strong> — not equal — [1, 010]</li>
-        <li><strong>NZR</strong> — not zero — [1, 011]</li>
-        <li><strong>UNC</strong> — unconditional — [0, 100]</li>
-      </ul>
+        <strong>Switch</strong> — Set to <code>0</code> for a register-to-register move (<code>strr</code>). Any non-zero value activates the output path (<code>stro</code>), with the value used as a 15-bit decoder address for pin output.
       </div>
     </section>
 
+    <!-- 4. REGISTER ARITHMETIC -->
+    <section id="arith-reg">
+      <div class="section-header">
+        <span class="section-num">04</span>
+        <h2>Register Arithmetic</h2>
+      </div>
+
+      <div class="asm-line">
+        <span class="asm-label">ASM</span>
+        <span class="asm-body">
+          <span class="kw">addr</span><span class="sep"> / </span>
+          <span class="kw">subr</span><span class="sep"> / </span>
+          <span class="kw">comr</span><span class="sep"> / </span>
+          <span class="kw">lftr</span><span class="sep"> / </span>
+          <span class="kw">rgtr</span><span class="sep"> / </span>
+          <span class="kw">andr</span><span class="sep"> / </span>
+          <span class="kw">lorr</span><span class="sep"> / </span>
+          <span class="kw">xorr</span>
+        </span>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Field</th><th>Bits</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Opcode</td><td>00011</td><td>5-bit opcode</td></tr>
+            <tr><td>Reg1</td><td>5</td><td>Left operand register</td></tr>
+            <tr><td>Operation</td><td>3</td><td>Same encoding as immediate variant</td></tr>
+            <tr><td>Reg2</td><td>5</td><td>Right operand register</td></tr>
+            <tr><td>Carry / Borrow</td><td>1</td><td>For ADD / SUB</td></tr>
+            <tr><td>Write Enable</td><td>1</td><td>Enable register write</td></tr>
+            <tr><td>Compare Switch</td><td>4</td><td>Condition subtype (for COM)</td></tr>
+            <tr><td>Unused</td><td>8</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Operations</h3>
+      <div class="ops-grid">
+        <div class="op-card"><span class="op-code">000</span><div class="op-info"><div class="op-name">addr {cb}, {reg2}, {reg1}</div><div class="op-desc">Add registers with carry</div></div></div>
+        <div class="op-card"><span class="op-code">001</span><div class="op-info"><div class="op-name">subr {cb}, {reg2}, {reg1}</div><div class="op-desc">Subtract registers with borrow</div></div></div>
+        <div class="op-card"><span class="op-code">010</span><div class="op-info"><div class="op-name">comr {comp}, {reg2}, {reg1}</div><div class="op-desc">Compare registers, sets condition codes</div></div></div>
+        <div class="op-card"><span class="op-code">011</span><div class="op-info"><div class="op-name">lftr {reg2}, {reg1}</div><div class="op-desc">Left shift by register value</div></div></div>
+        <div class="op-card"><span class="op-code">100</span><div class="op-info"><div class="op-name">rgtr {reg2}, {reg1}</div><div class="op-desc">Right shift by register value</div></div></div>
+        <div class="op-card"><span class="op-code">101</span><div class="op-info"><div class="op-name">andr {reg2}, {reg1}</div><div class="op-desc">Bitwise AND of registers</div></div></div>
+        <div class="op-card"><span class="op-code">110</span><div class="op-info"><div class="op-name">lorr {reg2}, {reg1}</div><div class="op-desc">Bitwise OR of registers</div></div></div>
+        <div class="op-card"><span class="op-code">111</span><div class="op-info"><div class="op-name">xorr {reg2}, {reg1}</div><div class="op-desc">Bitwise XOR of registers</div></div></div>
+      </div>
+
+      <div class="note">
+        <strong>Note</strong> — Condition codes from <code>comr</code> are shared with <code>comi</code>. See the Compare Condition Codes table in section 02.
+      </div>
+    </section>
+
+    <!-- 5. JUMP -->
     <section id="jump">
-      <h2>5. Compare Jump</h2>
-      <p>Assembly: <code>Jump[R] (R1, R2)</code></p>
+      <div class="section-header">
+        <span class="section-num">05</span>
+        <h2>Jump / Branch with Link</h2>
+      </div>
 
-      <table>
-        <tr><th>Field</th><th>Bits</th><th>Description</th></tr>
-        <tr><td>Opcode</td><td>00100</td><td>—</td></tr>
-        <tr><td>Condition Register</td><td>5</td><td>If all bits 1, jump</td></tr>
-        <tr><td>Location Register</td><td>5</td><td>Jump target address register</td></tr>
-        <tr><td>Unused</td><td>17</td><td>—</td></tr>
-      </table>
+      <div class="asm-line">
+        <span class="asm-label">ASM</span>
+        <span class="asm-body">
+          <span class="kw">jmp</span>
+          <span class="sep"> </span>
+          <span class="arg">{switch}</span><span class="sep">, </span><span class="arg">{loc_reg}</span><span class="sep">, </span><span class="arg">{answr_reg}</span>
+        </span>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Field</th><th>Bits</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Opcode</td><td>00100</td><td>5-bit opcode</td></tr>
+            <tr><td>Answer Reg</td><td>5</td><td>Register to save return address into</td></tr>
+            <tr><td>Loc Reg</td><td>5</td><td>Register holding jump target address</td></tr>
+            <tr><td>Switch</td><td>1</td><td>Return address enable (linked jump / call)</td></tr>
+            <tr><td>Unused</td><td>16</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note">
+        <strong>Note</strong> — The jump condition is evaluated from the flags set by a previous <code>com*</code> instruction. When <code>switch</code> is set, the current PC is saved to <code>answr_reg</code> before jumping — enabling subroutine calls.
+      </div>
     </section>
-
-      </section>
-
-  <!-- Footer -->
-  <footer>
-    <div class="footer-content">
-      <div class="footer-left">
-        <div class="footer-text">
-          © 2026 J.A Millsap Web Services • L1M1TL355 CPU ISA
-        </div>
-        <div style="font-size: 0.85rem; opacity: 0.7;">
-          A personal instruction set architecture
-        </div>
-      </div>
-
-      <div class="footer-right">
-        <a href="#intro">Back to Top</a>
-        <a href="https://github.com/l1m1tl355m1nd" target="_blank" rel="noopener">GitHub</a>
-        <a href="https://www.instagram.com/limitofminds/" target="_blank" rel="noopener">Personal Instagram</a>
-        <a href="https://x.com/L1M1TL355M1ND5" target="_blank" rel="noopener">Business Twitter</a>
-        <a href="https://x.com/L1M1TL355M1ND" target="_blank" rel="noopener">Personal Twitter</a>
-
-
-        
-      </div>
-    </div>
-  </footer>
-
-</main>
 
   </main>
-
 </div>
 
 <script>
-    // Some code from Google
-const sections = document.querySelectorAll('section[id]');
-const navLinks = document.querySelectorAll('.sidebar a');
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.sidebar a');
 
-window.addEventListener('scroll', () => {
-  let current = '';
-  sections.forEach(section => {
-    const sectionTop = section.offsetTop - 100;
-    if (scrollY >= sectionTop) {
-      current = section.getAttribute('id');
-    }
-  });
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.getAttribute('id');
+        navLinks.forEach(link => {
+          link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+        });
+      }
+    });
+  }, { rootMargin: '-30% 0px -60% 0px' });
 
-  navLinks.forEach(link => {
-    link.classList.remove('active');
-    if (link.getAttribute('href') === '#' + current) {
-      link.classList.add('active');
-    }
-  });
-});
+  sections.forEach(s => observer.observe(s));
 </script>
 
 </body>

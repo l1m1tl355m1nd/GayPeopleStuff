@@ -1,0 +1,192 @@
+#ruledef
+{
+;Fonts: Rubifont, Miniwi, Sub-Zero
+;font site: https://patorjk.com/software/taag/#p=display&f=miniwi&t=&x=none&v=4&h=4&w=80&we=false
+
+;▗▄▄▄▖▗▖  ▗▖▗▖  ▗▖▗▄▄▄▖▗▄▄▄ ▗▄▄▄▖ ▗▄▖▗▄▄▄▖▗▄▄▄▖
+;  █  ▐▛▚▞▜▌▐▛▚▞▜▌▐▌   ▐▌  █  █  ▐▌ ▐▌ █  ▐▌   
+;  █  ▐▌  ▐▌▐▌  ▐▌▐▛▀▀▘▐▌  █  █  ▐▛▀▜▌ █  ▐▛▀▀▘
+;▗▄█▄▖▐▌  ▐▌▐▌  ▐▌▐▙▄▄▖▐▙▄▄▀▗▄█▄▖▐▌ ▐▌ █  ▐▙▄▄▖                                                                                       
+                                             
+											 
+;▄▖▗       
+;▚ ▜▘▛▌▛▘█▌
+;▄▌▐▖▙▌▌ ▙▖
+
+    stri {we: u1}, {num: u21}, {reg: u5} =>
+        0b00000 @ num @ reg @ we
+		;Inputs: write enable, number, register
+;▄▖ ▌ ▌
+;▌▌▛▌▛▌
+;▛▌▙▌▙▌
+
+	addi {cb: u1}, {num: u13}, {reg: u5} =>
+		0b00001 @ 0b0000 @ 0b1 @ cb @ num @ 0b000 @ reg
+		;Inputs: carry, number, register
+;▄▖  ▌ ▗       ▗ 
+;▚ ▌▌▛▌▜▘▛▘▀▌▛▘▜▘
+;▄▌▙▌▙▌▐▖▌ █▌▙▖▐▖
+                
+	subi {cb: u1}, {num: u13}, {reg: u5} =>
+		0b00001 @ 0b0000 @ 0b1 @ cb @ num @ 0b001 @ reg
+		;Inputs: borrow, number, register
+;▄▖             
+;▌ ▛▌▛▛▌▛▌▀▌▛▘█▌
+;▙▖▙▌▌▌▌▙▌█▌▌ ▙▖
+;       ▌       
+		comi {com: u4}, {num: u13}, {reg: u5} =>
+		0b00001 @ com @ 0b1 @ 0b0 @ num @ 0b010 @ reg
+		;Inputs: switch, number, register
+		; _________________________________________
+		;|low 0 000 abv 0 001 | nlo 1 000 nab 1 001|
+		;|eql 0 010 zro 0 011 | neq 1 010 nzr 1 011|
+		;|¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯|¯¯¯¯¯¯¯¯¯|¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯|
+		;|               |unc 0 100|               |
+		;¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+;▜   ▐▘▗ 
+;▐ █▌▜▘▜▘
+;▐▖▙▖▐ ▐▖  
+
+	lfti {num: u13}, {reg: u5} =>
+		0b00001 @ 0b0000 @ 0b1 @ 0b0 @ num @ 0b011 @ reg
+		;Inputs: number, register
+;  ▘  ▌ ▗ 
+;▛▘▌▛▌▛▌▜▘
+;▌ ▌▙▌▌▌▐▖
+;   ▄▌    
+
+	rgti {num: u13}, {reg: u5} =>
+		0b00001 @ 0b0000 @ 0b1 @ 0b0 @ num @ 0b100 @ reg
+		;Inputs: number, register
+;     ▌
+;▀▌▛▌▛▌
+;█▌▌▌▙▌
+
+	andi {num: u13}, {reg: u5} =>
+		0b00001 @ 0b0000 @ 0b1 @ 0b0 @ num @ 0b101 @ reg
+		;Inputs: number, register
+;▛▌▛▘
+;▙▌▌ 
+    
+	lori {num: u13}, {reg: u5} =>
+		0b00001 @ 0b0000 @ 0b1 @ 0b0 @ num @ 0b110 @ reg   
+		;Inputs: number, register
+;▚▘▛▌▛▘
+;▞▖▙▌▌ 
+
+	xori {num: u13}, {reg: u5} =>
+		0b00001 @ 0b0000 @ 0b1 @ 0b0 @ num @ 0b111 @ reg
+		;Inputs: number, register
+		
+;▗▄▄▖ ▗▄▄▄▖ ▗▄▄▖▗▄▄▄▖ ▗▄▄▖▗▄▄▄▖▗▄▄▄▖▗▄▄▖ 
+;▐▌ ▐▌▐▌   ▐▌     █  ▐▌     █  ▐▌   ▐▌ ▐▌
+;▐▛▀▚▖▐▛▀▀▘▐▌▝▜▌  █   ▝▀▚▖  █  ▐▛▀▀▘▐▛▀▚▖
+;▐▌ ▐▌▐▙▄▄▖▝▚▄▞▘▗▄█▄▖▗▄▄▞▘  █  ▐▙▄▄▖▐▌ ▐▌
+                                        
+										
+;  ▗       
+;▛▘▜▘▛▌▛▘█▌
+;▄▌▐▖▙▌▌ ▙▖
+          
+	strr {reg2: u5}, {reg1: u5} =>
+		0b00010 @ 0b000000000000000 @ 0b0 @ 0b1 @ reg2 @ reg1
+		;Inputs: register 2, register 1
+      
+	stro {decoder: u15}, {reg1: u5} =>
+		0b00010 @ decoder @ 0b1 @ 0b1 @ 0b00000 @ reg1
+		;Inputs: decode, register 2, register 1
+;▄▖ ▌ ▌
+;▌▌▛▌▛▌
+;▛▌▙▌▙▌
+
+	addr {cb: u1}, {reg2: u5}, {reg1: u5} =>
+		0b00011 @ 0b0000 @ 0b1 @ cb @ 0b000 @ reg2 @ reg1
+		;Inputs: carry, register 2, register 1
+;▄▖  ▌ ▗       ▗ 
+;▚ ▌▌▛▌▜▘▛▘▀▌▛▘▜▘
+;▄▌▙▌▙▌▐▖▌ █▌▙▖▐▖
+
+	subr {cb: u1}, {reg2: u5}, {reg1: u5} =>
+		0b00011 @ 0b0000 @ 0b1 @ cb @ 0b001 @ reg2 @ reg1
+		;Inputs: borrow, register 2, register 1
+;▄▖             
+;▌ ▛▌▛▛▌▛▌▀▌▛▘█▌
+;▙▖▙▌▌▌▌▙▌█▌▌ ▙▖
+;       ▌   
+
+	comr {comp: u4}, {reg2: u5}, {reg1: u5} =>
+		0b00011 @ comp @ 0b1 @ 0b0 @ 0b010 @ reg2 @ reg1
+		;Inputs: switch, register 2, register 1
+;▜   ▐▘▗ 
+;▐ █▌▜▘▜▘
+;▐▖▙▖▐ ▐▖ 
+
+	lftr {reg2: u5}, {reg1: u5} =>
+		0b00011 @ 0b0000 @ 0b1 @ 0b0 @ 0b011 @ reg2 @ reg1
+		;Inputs: register 2, register 1
+;  ▘  ▌ ▗ 
+;▛▘▌▛▌▛▌▜▘
+;▌ ▌▙▌▌▌▐▖
+;   ▄▌    
+
+	rgtr {reg2: u5}, {reg1: u5} =>
+		0b00011 @ 0b0000 @ 0b1 @ 0b0 @ 0b100 @ reg2 @ reg1
+		;Inputs: register 2, register 1
+;     ▌
+;▀▌▛▌▛▌
+;█▌▌▌▙▌
+
+	andr {reg2: u5}, {reg1: u5} =>
+		0b00011 @ 0b0000 @ 0b1 @ 0b0 @ 0b101 @ reg2 @ reg1
+		;Inputs: register 2, register 1
+;▛▌▛▘
+;▙▌▌ 
+
+	lorr {reg2: u5}, {reg1: u5} =>
+		0b00011 @ 0b0000 @ 0b1 @ 0b0 @ 0b110 @ reg2 @ reg1
+		;Inputs: register 2, register 1
+;▚▘▛▌▛▘
+;▞▖▙▌▌ 
+
+	xorr {reg2: u5}, {reg1: u5} =>
+		0b00011 @ 0b0000 @ 0b1 @ 0b0 @ 0b111 @ reg2 @ reg1
+		;Inputs: register 2, register 1
+
+
+;   ▗▖▗▖ ▗▖▗▖  ▗▖▗▄▄▖ 
+;   ▐▌▐▌ ▐▌▐▛▚▞▜▌▐▌ ▐▌
+;   ▐▌▐▌ ▐▌▐▌  ▐▌▐▛▀▘ 
+; ▄▄▞▘▝▚▄▞▘▐▌  ▐▌▐▌
+                     
+                     
+                     
+	jmp {switch: u1}, {loc_reg: u5}, {answr_reg: u5} =>
+		0b00100 @ 0b0000000000000000 @ switch @ loc_reg @ answr_reg
+		;Inputs: switch, location, answer
+		
+		;instruction list 	
+		;stri: write enable, number, register
+		;addi: carry, number, register
+		;subi: borrow, number, register
+		;comi: switch, number, register
+		;lfti: number, register
+		;rgti: number, register
+		;andi: number, register
+		;lori: number, register
+		;xori: number, register
+		;strr: register 2, register 1
+		;stro: decode, register 2, register 1
+		;addr: carry,  register 2, register 1
+		;subr: borrow, register 2, register 1
+		;comr: switch, register 2, register 1
+		;lftr: register 2, register 1
+		;rgtr: register 2, register 1
+		;andr: register 2, register 1
+		;lorr: register 2, register 1
+		;xorr: register 2, register 1
+		;jmp: switch, location, answer
+		; Compare switch types:
+		;low 0 000 abv 0 001 nlo 1 000 nab 1 001
+		;eql 0 010 zro 0 011 neq 1 010 nzr 1 011
+		;               unc 0 100
+}

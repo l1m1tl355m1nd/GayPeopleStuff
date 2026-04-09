@@ -35,6 +35,7 @@ This repo is mostly a public brain dump right now. Feel free to:
 - Open issues with advice, resources, or "you forgot to do something."
 - Give advice on where you think I should go.
 - Support me by donating to my future Ko-fi so I can work on this more.
+- engage in community activity in the <a href="https://discord.gg/pyssXESdPr">discord</a>.
 
 This is a solo learning project for now.
 

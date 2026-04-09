@@ -5,8 +5,10 @@
 <h1 align="center">L1M1TL355-CPU</h1>
 
 <p align="center">
-  <i>My first-ever computer logic project — building a 32-bit CPU from scratch… slowly, horribly, and not organized, but it is happening!</i>
+  <i>My first-ever computer logic project, building a 32-bit CPU from scratch… slowly, horribly, and not organized, but it is happening!</i>
 </p>
+
+<h3 href="https://discord.gg/pyssXESdPr">Check out the discord!</h3>
 
 ---
 

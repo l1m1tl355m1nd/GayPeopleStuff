@@ -3,13 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>L1M1TL355 CPU ISA</title>
+  <title>ISA Reference</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-  <script>document.addEventListener('DOMContentLoaded', () => hljs.highlightAll());</script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -40,7 +39,6 @@
       font-size: 15px;
     }
 
-    /* ── SCANLINE OVERLAY ── */
     body::before {
       content: '';
       pointer-events: none;
@@ -57,7 +55,6 @@
       opacity: 0.4;
     }
 
-    /* ── LAYOUT ── */
     .container { display: flex; min-height: 100vh; }
 
     /* ── SIDEBAR ── */
@@ -109,6 +106,55 @@
       font-family: var(--mono);
     }
 
+    /* ── CPU SWITCHER ── */
+    .cpu-switcher {
+      padding: 1rem 1.2rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .cpu-switcher-label {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .cpu-tabs {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+
+    .cpu-tab {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.3em 0.75em;
+      border-radius: 3px;
+      border: 1px solid var(--border2);
+      background: transparent;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.03em;
+    }
+
+    .cpu-tab:hover {
+      color: var(--heading);
+      border-color: var(--border2);
+      background: rgba(255,255,255,0.04);
+    }
+
+    .cpu-tab.active {
+      color: var(--accent);
+      border-color: rgba(74,240,196,0.35);
+      background: rgba(74,240,196,0.07);
+    }
+
+    /* ── SIDEBAR NAV ── */
     .sidebar nav { padding: 1rem 0; flex: 1; }
 
     .sidebar nav .section-label {
@@ -152,6 +198,10 @@
     }
 
     .sidebar nav a.active .num { color: rgba(74,240,196,0.4); }
+
+    /* ── PAGE ── */
+    .page { display: none; }
+    .page.active { display: block; }
 
     /* ── MAIN ── */
     .main-content {
@@ -439,7 +489,6 @@
       color: var(--text-dim);
     }
 
-    /* ── SUBHEADING ── */
     h3 {
       font-family: var(--mono);
       font-size: 0.85rem;
@@ -452,10 +501,40 @@
 
     p { margin-bottom: 0.9rem; }
 
-    /* ── SCROLLBAR ── */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: var(--bg); }
     ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+    /* ── WIP PLACEHOLDER ── */
+    .wip-box {
+      border: 1px dashed var(--border2);
+      border-radius: 6px;
+      padding: 3rem 2rem;
+      text-align: center;
+      margin-top: 2rem;
+    }
+
+    .wip-box .wip-tag {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent2);
+      background: rgba(192,132,252,0.08);
+      border: 1px solid rgba(192,132,252,0.2);
+      padding: 0.2em 0.7em;
+      border-radius: 2px;
+      display: inline-block;
+      margin-bottom: 1rem;
+    }
+
+    .wip-box p {
+      color: var(--text-dim);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      margin: 0;
+    }
   </style>
 </head>
 <body>
@@ -464,283 +543,401 @@
 
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <div class="chip">ISA Ref v2</div>
-      <h1>L1M1TL355<br>CPU</h1>
-      <p>32-bit custom architecture</p>
+      <div class="chip">ISA Ref v3</div>
+      <h1 id="sidebar-title">L1M1TL355<br>CPU</h1>
+      <p id="sidebar-sub">32-bit custom architecture</p>
     </div>
-    <nav>
-      <div class="section-label">Sections</div>
-      <a href="#intro" class="active"><span class="num">00</span> Introduction</a>
-      <a href="#store-imm"><span class="num">01</span> Store Immediate</a>
-      <a href="#arith-imm"><span class="num">02</span> Arithmetic Immediate</a>
-      <a href="#store-reg"><span class="num">03</span> Register Store</a>
-      <a href="#arith-reg"><span class="num">04</span> Register Arithmetic</a>
-      <a href="#jump"><span class="num">05</span> Jump / Branch</a>
+
+    <div class="cpu-switcher">
+      <div class="cpu-switcher-label">CPU</div>
+      <div class="cpu-tabs" id="cpu-tabs">
+        <!-- tabs injected by JS -->
+      </div>
+    </div>
+
+    <nav id="sidebar-nav">
+      <!-- nav links injected by JS -->
     </nav>
   </aside>
 
-  <main class="main-content">
-
-    <!-- INTRO -->
-    <section id="intro" class="hero">
-      <img src="header-2.png" alt="L1M1TL355 CPU">
-      <div class="hero-meta">
-        <span class="hero-badge">customasm · #ruledef</span>
-        <span class="hero-badge">32-bit</span>
-      </div>
-      <h2>Instruction Set Architecture</h2>
-      <p>
-        Updated reference for the custom 32-bit ISA, using the assembly syntax defined
-        in <code>#ruledef</code> from customasm. Covers immediate and register storage,
-        arithmetic, and branch instructions.
-      </p>
-    </section>
-
-    <!-- 1. STORE IMMEDIATE -->
-    <section id="store-imm">
-      <div class="section-header">
-        <span class="section-num">01</span>
-        <h2>Store Immediate</h2>
-      </div>
-
-      <div class="asm-line">
-        <span class="asm-label">ASM</span>
-        <span class="asm-body">
-          <span class="kw">stri</span>
-          <span class="sep"> </span>
-          <span class="arg">{we}</span><span class="sep">, </span><span class="arg">{num}</span><span class="sep">, </span><span class="arg">{reg}</span>
-        </span>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Field</th><th>Bits</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Opcode</td><td>00000</td><td>5-bit opcode</td></tr>
-            <tr><td>Number</td><td>21</td><td>21-bit immediate value</td></tr>
-            <tr><td>Register</td><td>5</td><td>Destination register (0–31)</td></tr>
-            <tr><td>Write Enable</td><td>1</td><td>Enable register write (usually 1)</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="note"><strong>Note</strong> — Loads a 21-bit immediate value directly into the destination register.</div>
-    </section>
-
-    <!-- 2. ARITHMETIC IMMEDIATE -->
-    <section id="arith-imm">
-      <div class="section-header">
-        <span class="section-num">02</span>
-        <h2>Arithmetic with Immediate</h2>
-      </div>
-
-      <div class="asm-line">
-        <span class="asm-label">ASM</span>
-        <span class="asm-body">
-          <span class="kw">addi</span><span class="sep"> / </span>
-          <span class="kw">subi</span><span class="sep"> / </span>
-          <span class="kw">comi</span><span class="sep"> / </span>
-          <span class="kw">lfti</span><span class="sep"> / </span>
-          <span class="kw">rgti</span><span class="sep"> / </span>
-          <span class="kw">andi</span><span class="sep"> / </span>
-          <span class="kw">lori</span><span class="sep"> / </span>
-          <span class="kw">xori</span>
-        </span>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Field</th><th>Bits</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Opcode</td><td>00001</td><td>5-bit opcode</td></tr>
-            <tr><td>Register</td><td>5</td><td>Target register</td></tr>
-            <tr><td>Operation</td><td>3</td><td>ADD=000, SUB=001, COM=010, LFT=011, RGT=100, AND=101, LOR=110, XOR=111</td></tr>
-            <tr><td>Immediate</td><td>13</td><td>13-bit immediate value</td></tr>
-            <tr><td>Compare Switch</td><td>4</td><td>Condition subtype flags (used by COM)</td></tr>
-            <tr><td>Carry / Borrow</td><td>1</td><td>Carry-in for ADD, borrow-in for SUB</td></tr>
-            <tr><td>Write Enable</td><td>1</td><td>Enable register write</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h3>Operations</h3>
-      <div class="ops-grid">
-        <div class="op-card"><span class="op-code">000</span><div class="op-info"><div class="op-name">addi {cb}, {num}, {reg}</div><div class="op-desc">Add immediate with carry</div></div></div>
-        <div class="op-card"><span class="op-code">001</span><div class="op-info"><div class="op-name">subi {cb}, {num}, {reg}</div><div class="op-desc">Subtract immediate with borrow</div></div></div>
-        <div class="op-card"><span class="op-code">010</span><div class="op-info"><div class="op-name">comi {com}, {num}, {reg}</div><div class="op-desc">Compare immediate, sets condition codes</div></div></div>
-        <div class="op-card"><span class="op-code">011</span><div class="op-info"><div class="op-name">lfti {num}, {reg}</div><div class="op-desc">Left shift by immediate</div></div></div>
-        <div class="op-card"><span class="op-code">100</span><div class="op-info"><div class="op-name">rgti {num}, {reg}</div><div class="op-desc">Right shift by immediate</div></div></div>
-        <div class="op-card"><span class="op-code">101</span><div class="op-info"><div class="op-name">andi {num}, {reg}</div><div class="op-desc">Bitwise AND immediate</div></div></div>
-        <div class="op-card"><span class="op-code">110</span><div class="op-info"><div class="op-name">lori {num}, {reg}</div><div class="op-desc">Bitwise OR immediate</div></div></div>
-        <div class="op-card"><span class="op-code">111</span><div class="op-info"><div class="op-name">xori {num}, {reg}</div><div class="op-desc">Bitwise XOR immediate</div></div></div>
-      </div>
-
-      <h3>Compare Condition Codes</h3>
-      <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:0.8rem;">Output is all 1s when the condition is met. Used by <code>comi</code> and <code>comr</code>.</p>
-      <div class="cond-grid">
-        <div class="cond-card"><div class="cond-top"><span class="cond-mnemonic">LOW</span><span class="cond-bits">[0, 000]</span></div><div class="cond-label">Below (unsigned)</div></div>
-        <div class="cond-card"><div class="cond-top"><span class="cond-mnemonic">ABV</span><span class="cond-bits">[0, 001]</span></div><div class="cond-label">Above (unsigned)</div></div>
-        <div class="cond-card"><div class="cond-top"><span class="cond-mnemonic">EQL</span><span class="cond-bits">[0, 010]</span></div><div class="cond-label">Equal</div></div>
-        <div class="cond-card"><div class="cond-top"><span class="cond-mnemonic">ZRO</span><span class="cond-bits">[0, 011]</span></div><div class="cond-label">Zero</div></div>
-        <div class="cond-card"><div class="cond-top"><span class="cond-mnemonic">UNC</span><span class="cond-bits">[0, 100]</span></div><div class="cond-label">Unconditional</div></div>
-        <div class="cond-card"><div class="cond-top"><span class="cond-mnemonic">NLO</span><span class="cond-bits">[1, 000]</span></div><div class="cond-label">Not below</div></div>
-        <div class="cond-card"><div class="cond-top"><span class="cond-mnemonic">NAB</span><span class="cond-bits">[1, 001]</span></div><div class="cond-label">Not above</div></div>
-        <div class="cond-card"><div class="cond-top"><span class="cond-mnemonic">NEQ</span><span class="cond-bits">[1, 010]</span></div><div class="cond-label">Not equal</div></div>
-        <div class="cond-card"><div class="cond-top"><span class="cond-mnemonic">NZR</span><span class="cond-bits">[1, 011]</span></div><div class="cond-label">Not zero</div></div>
-      </div>
-    </section>
-
-    <!-- 3. REGISTER STORE -->
-    <section id="store-reg">
-      <div class="section-header">
-        <span class="section-num">03</span>
-        <h2>Register Store / Output</h2>
-      </div>
-
-      <div class="asm-line">
-        <span class="asm-label">ASM</span>
-        <span class="asm-body">
-          <span class="kw">strr</span> <span class="arg">{reg2}</span><span class="sep">, </span><span class="arg">{reg1}</span>
-          <span class="sep">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
-          <span class="kw">stro</span> <span class="arg">{decoder}</span><span class="sep">, </span><span class="arg">{reg1}</span>
-        </span>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Field</th><th>Bits</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Opcode</td><td>00010</td><td>5-bit opcode</td></tr>
-            <tr><td>Reg1</td><td>5</td><td>Source register</td></tr>
-            <tr><td>Reg2</td><td>5</td><td>Destination (for register store), unused for OUT</td></tr>
-            <tr><td>Write Enable</td><td>1</td><td>Enable register write</td></tr>
-            <tr><td>Switch</td><td>15</td><td>0 = register move; 1–14 = output (15-bit pin addressing)</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="note">
-        <strong>Switch</strong> — Set to <code>0</code> for a register-to-register move (<code>strr</code>). Any non-zero value activates the output path (<code>stro</code>), with the value used as a 15-bit decoder address for pin output.
-      </div>
-    </section>
-
-    <!-- 4. REGISTER ARITHMETIC -->
-    <section id="arith-reg">
-      <div class="section-header">
-        <span class="section-num">04</span>
-        <h2>Register Arithmetic</h2>
-      </div>
-
-      <div class="asm-line">
-        <span class="asm-label">ASM</span>
-        <span class="asm-body">
-          <span class="kw">addr</span><span class="sep"> / </span>
-          <span class="kw">subr</span><span class="sep"> / </span>
-          <span class="kw">comr</span><span class="sep"> / </span>
-          <span class="kw">lftr</span><span class="sep"> / </span>
-          <span class="kw">rgtr</span><span class="sep"> / </span>
-          <span class="kw">andr</span><span class="sep"> / </span>
-          <span class="kw">lorr</span><span class="sep"> / </span>
-          <span class="kw">xorr</span>
-        </span>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Field</th><th>Bits</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Opcode</td><td>00011</td><td>5-bit opcode</td></tr>
-            <tr><td>Reg1</td><td>5</td><td>Left operand register</td></tr>
-            <tr><td>Operation</td><td>3</td><td>Same encoding as immediate variant</td></tr>
-            <tr><td>Reg2</td><td>5</td><td>Right operand register</td></tr>
-            <tr><td>Carry / Borrow</td><td>1</td><td>For ADD / SUB</td></tr>
-            <tr><td>Write Enable</td><td>1</td><td>Enable register write</td></tr>
-            <tr><td>Compare Switch</td><td>4</td><td>Condition subtype (for COM)</td></tr>
-            <tr><td>Unused</td><td>8</td><td>—</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h3>Operations</h3>
-      <div class="ops-grid">
-        <div class="op-card"><span class="op-code">000</span><div class="op-info"><div class="op-name">addr {cb}, {reg2}, {reg1}</div><div class="op-desc">Add registers with carry</div></div></div>
-        <div class="op-card"><span class="op-code">001</span><div class="op-info"><div class="op-name">subr {cb}, {reg2}, {reg1}</div><div class="op-desc">Subtract registers with borrow</div></div></div>
-        <div class="op-card"><span class="op-code">010</span><div class="op-info"><div class="op-name">comr {comp}, {reg2}, {reg1}</div><div class="op-desc">Compare registers, sets condition codes</div></div></div>
-        <div class="op-card"><span class="op-code">011</span><div class="op-info"><div class="op-name">lftr {reg2}, {reg1}</div><div class="op-desc">Left shift by register value</div></div></div>
-        <div class="op-card"><span class="op-code">100</span><div class="op-info"><div class="op-name">rgtr {reg2}, {reg1}</div><div class="op-desc">Right shift by register value</div></div></div>
-        <div class="op-card"><span class="op-code">101</span><div class="op-info"><div class="op-name">andr {reg2}, {reg1}</div><div class="op-desc">Bitwise AND of registers</div></div></div>
-        <div class="op-card"><span class="op-code">110</span><div class="op-info"><div class="op-name">lorr {reg2}, {reg1}</div><div class="op-desc">Bitwise OR of registers</div></div></div>
-        <div class="op-card"><span class="op-code">111</span><div class="op-info"><div class="op-name">xorr {reg2}, {reg1}</div><div class="op-desc">Bitwise XOR of registers</div></div></div>
-      </div>
-
-      <div class="note">
-        <strong>Note</strong> — Condition codes from <code>comr</code> are shared with <code>comi</code>. See the Compare Condition Codes table in section 02.
-      </div>
-    </section>
-
-    <!-- 5. JUMP -->
-    <section id="jump">
-      <div class="section-header">
-        <span class="section-num">05</span>
-        <h2>Jump / Branch with Link</h2>
-      </div>
-
-      <div class="asm-line">
-        <span class="asm-label">ASM</span>
-        <span class="asm-body">
-          <span class="kw">jmp</span>
-          <span class="sep"> </span>
-          <span class="arg">{switch}</span><span class="sep">, </span><span class="arg">{loc_reg}</span><span class="sep">, </span><span class="arg">{answr_reg}</span>
-        </span>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Field</th><th>Bits</th><th>Description</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Opcode</td><td>00100</td><td>5-bit opcode</td></tr>
-            <tr><td>Answer Reg</td><td>5</td><td>Register to save return address into</td></tr>
-            <tr><td>Loc Reg</td><td>5</td><td>Register holding jump target address</td></tr>
-            <tr><td>Switch</td><td>1</td><td>Return address enable (linked jump / call)</td></tr>
-            <tr><td>Unused</td><td>16</td><td>—</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="note">
-        <strong>Note</strong> — The jump condition is evaluated from the flags set by a previous <code>com*</code> instruction. When <code>switch</code> is set, the current PC is saved to <code>answr_reg</code> before jumping — enabling subroutine calls.
-      </div>
-    </section>
-
+  <main class="main-content" id="main-content">
+    <!-- pages injected by JS -->
   </main>
+
 </div>
 
 <script>
-  const sections = document.querySelectorAll('section[id]');
-  const navLinks = document.querySelectorAll('.sidebar a');
+// ─────────────────────────────────────────────
+//  CPU DEFINITIONS
+//  To add a new CPU: push a new entry to CPUS.
+//  Each CPU has: id, name, sub, sections[].
+//  Each section has: id, num, label, html (inner HTML for that section).
+// ─────────────────────────────────────────────
 
-  const observer = new IntersectionObserver((entries) => {
+const CPUS = [
+  {
+    id: 'l1m1tl355',
+    name: 'L1M1TL355 v1',
+    sub: '32-bit custom architecture',
+    sections: [
+      {
+        id: 'intro',
+        num: '00',
+        label: 'Introduction',
+        html: `
+          <section id="l1m1tl355-intro" class="hero">
+            <img src="images/header-2.png" alt="L1M1TL355 CPU">
+            <div class="hero-meta">
+              <span class="hero-badge">customasm · #ruledef</span>
+              <span class="hero-badge">32-bit</span>
+            </div>
+            <h2>Instruction Set Architecture</h2>
+            <p>
+              Updated reference for the custom 32-bit ISA, using the assembly syntax defined
+              in <code>#ruledef</code> from customasm. Covers immediate and register storage,
+              arithmetic, and branch instructions.
+            </p>
+          </section>`
+      },
+      {
+        id: 'store-imm',
+        num: '01',
+        label: 'Store Immediate',
+        html: `
+          <section id="l1m1tl355-store-imm">
+            <div class="section-header">
+              <span class="section-num">01</span>
+              <h2>Store Immediate</h2>
+            </div>
+            <div class="asm-line">
+              <span class="asm-label">ASM</span>
+              <span class="asm-body">
+                <span class="kw">stri</span>
+                <span class="sep"> </span>
+                <span class="arg">{we}</span><span class="sep">, </span><span class="arg">{num}</span><span class="sep">, </span><span class="arg">{reg}</span>
+              </span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Field</th><th>Bits</th><th>Description</th></tr></thead>
+                <tbody>
+                  <tr><td>Opcode</td><td>00000</td><td>5-bit opcode</td></tr>
+                  <tr><td>Number</td><td>21</td><td>21-bit immediate value</td></tr>
+                  <tr><td>Register</td><td>5</td><td>Destination register (0–31)</td></tr>
+                  <tr><td>Write Enable</td><td>1</td><td>Enable register write (usually 1)</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="note"><strong>Note</strong> — Loads a 21-bit immediate value directly into the destination register.</div>
+          </section>`
+      },
+      {
+        id: 'arith-imm',
+        num: '02',
+        label: 'Arithmetic Immediate',
+        html: `
+          <section id="l1m1tl355-arith-imm">
+            <div class="section-header">
+              <span class="section-num">02</span>
+              <h2>Arithmetic with Immediate</h2>
+            </div>
+            <div class="asm-line">
+              <span class="asm-label">ASM</span>
+              <span class="asm-body">
+                <span class="kw">addi</span><span class="sep"> / </span>
+                <span class="kw">subi</span><span class="sep"> / </span>
+                <span class="kw">comi</span><span class="sep"> / </span>
+                <span class="kw">lfti</span><span class="sep"> / </span>
+                <span class="kw">rgti</span><span class="sep"> / </span>
+                <span class="kw">andi</span><span class="sep"> / </span>
+                <span class="kw">lori</span><span class="sep"> / </span>
+                <span class="kw">xori</span>
+              </span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Field</th><th>Bits</th><th>Description</th></tr></thead>
+                <tbody>
+                  <tr><td>Opcode</td><td>00001</td><td>5-bit opcode</td></tr>
+                  <tr><td>Register</td><td>5</td><td>Target register</td></tr>
+                  <tr><td>Operation</td><td>3</td><td>ADD=000, SUB=001, COM=010, LFT=011, RGT=100, AND=101, LOR=110, XOR=111</td></tr>
+                  <tr><td>Immediate</td><td>13</td><td>13-bit immediate value</td></tr>
+                  <tr><td>Compare Switch</td><td>4</td><td>Condition subtype flags (used by COM)</td></tr>
+                  <tr><td>Carry / Borrow</td><td>1</td><td>Carry-in for ADD, borrow-in for SUB</td></tr>
+                  <tr><td>Write Enable</td><td>1</td><td>Enable register write</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <h3>Operations</h3>
+            <div class="ops-grid">
+              <div class="op-card"><span class="op-code">000</span><div class="op-info"><div class="op-name">addi {cb}, {num}, {reg}</div><div class="op-desc">Add immediate with carry</div></div></div>
+              <div class="op-card"><span class="op-code">001</span><div class="op-info"><div class="op-name">subi {cb}, {num}, {reg}</div><div class="op-desc">Subtract immediate with borrow</div></div></div>
+              <div class="op-card"><span class="op-code">010</span><div class="op-info"><div class="op-name">comi {com}, {num}, {reg}</div><div class="op-desc">Compare immediate, sets condition codes</div></div></div>
+              <div class="op-card"><span class="op-code">011</span><div class="op-info"><div class="op-name">lfti {num}, {reg}</div><div class="op-desc">Left shift by immediate</div></div></div>
+              <div class="op-card"><span class="op-code">100</span><div class="op-info"><div class="op-name">rgti {num}, {reg}</div><div class="op-desc">Right shift by immediate</div></div></div>
+              <div class="op-card"><span class="op-code">101</span><div class="op-info"><div class="op-name">andi {num}, {reg}</div><div class="op-desc">Bitwise AND immediate</div></div></div>
+              <div class="op-card"><span class="op-code">110</span><div class="op-info"><div class="op-name">lori {num}, {reg}</div><div class="op-desc">Bitwise OR immediate</div></div></div>
+              <div class="op-card"><span class="op-code">111</span><div class="op-info"><div class="op-name">xori {num}, {reg}</div><div class="op-desc">Bitwise XOR immediate</div></div></div>
+            </div>
+            <h3>Compare Condition Codes</h3>
+            <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:0.8rem;">Output is all 1s when the condition is met. Used by <code>comi</code> and <code>comr</code>.</p>
+            <div class="cond-grid">
+              <div class="cond-card"><div class="cond-top"><span class="cond-mnemonic">LOW</span><span class="cond-bits">[0, 000]</span></div><div class="cond-label">Below (unsigned)</div></div>
+              <div class="cond-card"><div class="cond-top"><span class="cond-mnemonic">ABV</span><span class="cond-bits">[0, 001]</span></div><div class="cond-label">Above (unsigned)</div></div>
+              <div class="cond-card"><div class="cond-top"><span class="cond-mnemonic">EQL</span><span class="cond-bits">[0, 010]</span></div><div class="cond-label">Equal</div></div>
+              <div class="cond-card"><div class="cond-top"><span class="cond-mnemonic">ZRO</span><span class="cond-bits">[0, 011]</span></div><div class="cond-label">Zero</div></div>
+              <div class="cond-card"><div class="cond-top"><span class="cond-mnemonic">UNC</span><span class="cond-bits">[0, 100]</span></div><div class="cond-label">Unconditional</div></div>
+              <div class="cond-card"><div class="cond-top"><span class="cond-mnemonic">NLO</span><span class="cond-bits">[1, 000]</span></div><div class="cond-label">Not below</div></div>
+              <div class="cond-card"><div class="cond-top"><span class="cond-mnemonic">NAB</span><span class="cond-bits">[1, 001]</span></div><div class="cond-label">Not above</div></div>
+              <div class="cond-card"><div class="cond-top"><span class="cond-mnemonic">NEQ</span><span class="cond-bits">[1, 010]</span></div><div class="cond-label">Not equal</div></div>
+              <div class="cond-card"><div class="cond-top"><span class="cond-mnemonic">NZR</span><span class="cond-bits">[1, 011]</span></div><div class="cond-label">Not zero</div></div>
+            </div>
+          </section>`
+      },
+      {
+        id: 'store-reg',
+        num: '03',
+        label: 'Register Store',
+        html: `
+          <section id="l1m1tl355-store-reg">
+            <div class="section-header">
+              <span class="section-num">03</span>
+              <h2>Register Store / Output</h2>
+            </div>
+            <div class="asm-line">
+              <span class="asm-label">ASM</span>
+              <span class="asm-body">
+                <span class="kw">strr</span> <span class="arg">{reg2}</span><span class="sep">, </span><span class="arg">{reg1}</span>
+                <span class="sep">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+                <span class="kw">stro</span> <span class="arg">{decoder}</span><span class="sep">, </span><span class="arg">{reg1}</span>
+              </span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Field</th><th>Bits</th><th>Description</th></tr></thead>
+                <tbody>
+                  <tr><td>Opcode</td><td>00010</td><td>5-bit opcode</td></tr>
+                  <tr><td>Reg1</td><td>5</td><td>Source register</td></tr>
+                  <tr><td>Reg2</td><td>5</td><td>Destination (for register store), unused for OUT</td></tr>
+                  <tr><td>Write Enable</td><td>1</td><td>Enable register write</td></tr>
+                  <tr><td>Switch</td><td>15</td><td>0 = register move; 1–14 = output (15-bit pin addressing)</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="note">
+              <strong>Switch</strong> — Set to <code>0</code> for a register-to-register move (<code>strr</code>). Any non-zero value activates the output path (<code>stro</code>), with the value used as a 15-bit decoder address for pin output.
+            </div>
+          </section>`
+      },
+      {
+        id: 'arith-reg',
+        num: '04',
+        label: 'Register Arithmetic',
+        html: `
+          <section id="l1m1tl355-arith-reg">
+            <div class="section-header">
+              <span class="section-num">04</span>
+              <h2>Register Arithmetic</h2>
+            </div>
+            <div class="asm-line">
+              <span class="asm-label">ASM</span>
+              <span class="asm-body">
+                <span class="kw">addr</span><span class="sep"> / </span>
+                <span class="kw">subr</span><span class="sep"> / </span>
+                <span class="kw">comr</span><span class="sep"> / </span>
+                <span class="kw">lftr</span><span class="sep"> / </span>
+                <span class="kw">rgtr</span><span class="sep"> / </span>
+                <span class="kw">andr</span><span class="sep"> / </span>
+                <span class="kw">lorr</span><span class="sep"> / </span>
+                <span class="kw">xorr</span>
+              </span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Field</th><th>Bits</th><th>Description</th></tr></thead>
+                <tbody>
+                  <tr><td>Opcode</td><td>00011</td><td>5-bit opcode</td></tr>
+                  <tr><td>Reg1</td><td>5</td><td>Left operand register</td></tr>
+                  <tr><td>Operation</td><td>3</td><td>Same encoding as immediate variant</td></tr>
+                  <tr><td>Reg2</td><td>5</td><td>Right operand register</td></tr>
+                  <tr><td>Carry / Borrow</td><td>1</td><td>For ADD / SUB</td></tr>
+                  <tr><td>Write Enable</td><td>1</td><td>Enable register write</td></tr>
+                  <tr><td>Compare Switch</td><td>4</td><td>Condition subtype (for COM)</td></tr>
+                  <tr><td>Unused</td><td>8</td><td>—</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <h3>Operations</h3>
+            <div class="ops-grid">
+              <div class="op-card"><span class="op-code">000</span><div class="op-info"><div class="op-name">addr {cb}, {reg2}, {reg1}</div><div class="op-desc">Add registers with carry</div></div></div>
+              <div class="op-card"><span class="op-code">001</span><div class="op-info"><div class="op-name">subr {cb}, {reg2}, {reg1}</div><div class="op-desc">Subtract registers with borrow</div></div></div>
+              <div class="op-card"><span class="op-code">010</span><div class="op-info"><div class="op-name">comr {comp}, {reg2}, {reg1}</div><div class="op-desc">Compare registers, sets condition codes</div></div></div>
+              <div class="op-card"><span class="op-code">011</span><div class="op-info"><div class="op-name">lftr {reg2}, {reg1}</div><div class="op-desc">Left shift by register value</div></div></div>
+              <div class="op-card"><span class="op-code">100</span><div class="op-info"><div class="op-name">rgtr {reg2}, {reg1}</div><div class="op-desc">Right shift by register value</div></div></div>
+              <div class="op-card"><span class="op-code">101</span><div class="op-info"><div class="op-name">andr {reg2}, {reg1}</div><div class="op-desc">Bitwise AND of registers</div></div></div>
+              <div class="op-card"><span class="op-code">110</span><div class="op-info"><div class="op-name">lorr {reg2}, {reg1}</div><div class="op-desc">Bitwise OR of registers</div></div></div>
+              <div class="op-card"><span class="op-code">111</span><div class="op-info"><div class="op-name">xorr {reg2}, {reg1}</div><div class="op-desc">Bitwise XOR of registers</div></div></div>
+            </div>
+            <div class="note">
+              <strong>Note</strong> — Condition codes from <code>comr</code> are shared with <code>comi</code>. See the Compare Condition Codes table in section 02.
+            </div>
+          </section>`
+      },
+      {
+        id: 'jump',
+        num: '05',
+        label: 'Jump / Branch',
+        html: `
+          <section id="l1m1tl355-jump">
+            <div class="section-header">
+              <span class="section-num">05</span>
+              <h2>Jump / Branch with Link</h2>
+            </div>
+            <div class="asm-line">
+              <span class="asm-label">ASM</span>
+              <span class="asm-body">
+                <span class="kw">jmp</span>
+                <span class="sep"> </span>
+                <span class="arg">{switch}</span><span class="sep">, </span><span class="arg">{loc_reg}</span><span class="sep">, </span><span class="arg">{answr_reg}</span>
+              </span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Field</th><th>Bits</th><th>Description</th></tr></thead>
+                <tbody>
+                  <tr><td>Opcode</td><td>00100</td><td>5-bit opcode</td></tr>
+                  <tr><td>Answer Reg</td><td>5</td><td>Register to save return address into</td></tr>
+                  <tr><td>Loc Reg</td><td>5</td><td>Register holding jump target address</td></tr>
+                  <tr><td>Switch</td><td>1</td><td>Return address enable (linked jump / call)</td></tr>
+                  <tr><td>Unused</td><td>16</td><td>—</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="note">
+              <strong>Note</strong> — The jump condition is evaluated from the flags set by a previous <code>com*</code> instruction. When <code>switch</code> is set, the current PC is saved to <code>answr_reg</code> before jumping — enabling subroutine calls.
+            </div>
+          </section>`
+      }
+    ]
+  },
+
+  // ─── ADD YOUR SECOND CPU HERE ───────────────────────────────────────
+  // Copy the block above, change the id/name/sub, and fill in sections.
+  // Example stub:
+  {
+    id: 'l1m1tl355 v2',
+    name: 'l1m1tl355 v2',
+    sub: '32-bit custom architecture',
+    sections: [
+      {
+        id: 'intro',
+        num: '00',
+        label: 'Introduction',
+        html: `
+          <section id="cpu2-intro" class="hero">
+            <div class="hero-meta">
+              <span class="hero-badge">customasm · #ruledef</span>
+              <span class="hero-badge">16-bit</span>
+            </div>
+            <h2>Instruction Set Architecture</h2>
+            <p>Documentation for CPU-2 coming soon.</p>
+            <div class="wip-box">
+              <div class="wip-tag">Work in progress</div>
+              <p>Add sections for this CPU in the <code>CPUS</code> array inside the &lt;script&gt; tag.</p>
+            </div>
+          </section>`
+      }
+    ]
+  }
+  // ────────────────────────────────────────────────────────────────────
+];
+
+// ─── RENDERER ────────────────────────────────────────────────────────
+
+let activeCpu = CPUS[0].id;
+
+function buildTabs() {
+  const container = document.getElementById('cpu-tabs');
+  container.innerHTML = CPUS.map(cpu => `
+    <button class="cpu-tab${cpu.id === activeCpu ? ' active' : ''}"
+            onclick="switchCpu('${cpu.id}')">${cpu.name}</button>
+  `).join('');
+}
+
+function buildNav(cpu) {
+  const nav = document.getElementById('sidebar-nav');
+  nav.innerHTML = `<div class="section-label">Sections</div>` +
+    cpu.sections.map((s, i) => `
+      <a href="#${cpu.id}-${s.id}" class="${i === 0 ? 'active' : ''}">
+        <span class="num">${s.num}</span>${s.label}
+      </a>
+    `).join('');
+}
+
+function buildPages() {
+  const main = document.getElementById('main-content');
+  main.innerHTML = CPUS.map(cpu => `
+    <div class="page${cpu.id === activeCpu ? ' active' : ''}" id="page-${cpu.id}">
+      ${cpu.sections.map(s => s.html).join('\n')}
+    </div>
+  `).join('');
+}
+
+function switchCpu(id) {
+  activeCpu = id;
+  const cpu = CPUS.find(c => c.id === id);
+
+  // update tabs
+  document.querySelectorAll('.cpu-tab').forEach(t => {
+    t.classList.toggle('active', t.textContent === cpu.name);
+  });
+
+  // update sidebar branding
+  document.getElementById('sidebar-title').innerHTML = cpu.name.replace(/(.{8})/g, '$1<br>').replace(/<br>$/, '');
+  document.getElementById('sidebar-sub').textContent = cpu.sub;
+
+  // swap page visibility
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+
+  // rebuild nav
+  buildNav(cpu);
+
+  // scroll to top
+  window.scrollTo(0, 0);
+
+  // re-attach intersection observer
+  attachObserver(cpu);
+
+  // re-run syntax highlighting on newly visible content
+  document.querySelectorAll('#page-' + id + ' code:not(.hljs)').forEach(el => hljs.highlightElement(el));
+}
+
+function attachObserver(cpu) {
+  const navLinks = document.querySelectorAll('#sidebar-nav a');
+  const sections = document.querySelectorAll('#page-' + cpu.id + ' section[id]');
+
+  if (window._isaObserver) window._isaObserver.disconnect();
+
+  window._isaObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
-        const id = entry.target.getAttribute('id');
+        const id = entry.target.getAttribute('id').replace(cpu.id + '-', '');
         navLinks.forEach(link => {
-          link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+          link.classList.toggle('active', link.getAttribute('href') === '#' + cpu.id + '-' + id);
         });
       }
     });
   }, { rootMargin: '-30% 0px -60% 0px' });
 
-  sections.forEach(s => observer.observe(s));
+  sections.forEach(s => window._isaObserver.observe(s));
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────
+buildTabs();
+buildPages();
+buildNav(CPUS[0]);
+attachObserver(CPUS[0]);
 </script>
 
 </body>
